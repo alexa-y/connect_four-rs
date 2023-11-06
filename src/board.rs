@@ -14,7 +14,7 @@ pub struct Board {
 
 impl Board {
     pub fn new() -> Board {
-        Board {
+        Self {
             slots: [[0; HEIGHT]; WIDTH]
         }
     }
@@ -121,7 +121,7 @@ impl Board {
     pub fn print(&self) {
         for row in (0..HEIGHT).rev() {
             for col in 0..WIDTH {
-                print!("{}", Board::rune_for_piece(self.slots[col][row]));
+                print!("{} ", Board::rune_for_piece(self.slots[col][row]));
             }
             println!("")
         }

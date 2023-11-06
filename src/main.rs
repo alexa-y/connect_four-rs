@@ -1,11 +1,33 @@
 mod board;
+mod server;
+mod client;
 
 use crate::board::Board;
+use crate::client::Client;
+use std::env;
 use std::io::{self, BufRead};
+use std::net::TcpStream;
 
 fn main() -> io::Result<()> {
-    let mut reader = io::stdin().lock();
-    play(&mut reader)
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() == 1 {
+        let mut reader = io::stdin().lock();
+        play(&mut reader)?
+    } else if args[1] == "server" {
+        server::listen()?;
+    } else if args[1] == "address" {
+        if args.len() == 2 {
+            println!("Expected server address but none provided");
+            return Ok(())
+        }
+        let address = &args[2];
+
+        let stream = TcpStream::connect(address)?;
+        Client::new(stream, 2).process()?
+    }
+
+    Ok(())
 }
 
 fn play(reader: &mut dyn BufRead) -> io::Result<()> {
