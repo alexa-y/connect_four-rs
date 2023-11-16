@@ -1,5 +1,5 @@
-const WIDTH: usize = 7;
-const HEIGHT: usize = 6;
+pub const WIDTH: usize = 7;
+pub const HEIGHT: usize = 6;
 
 #[derive(PartialEq, Debug)]
 pub enum BoardPlaceError {
@@ -41,6 +41,7 @@ impl Board {
 
             for row in 0..HEIGHT {
                 if self.slots[col][row] == 0 {
+                    piece = 0;
                     continue
                 }
 
@@ -62,6 +63,7 @@ impl Board {
             
             for col in 0..WIDTH {
                 if self.slots[col][row] == 0 {
+                    piece = 0;
                     continue
                 }
 
@@ -118,6 +120,10 @@ impl Board {
         true
     }
 
+    pub fn finished(&self) -> bool {
+        self.full() || self.winner().is_some()
+    }
+
     pub fn print(&self) {
         for row in (0..HEIGHT).rev() {
             for col in 0..WIDTH {
@@ -137,7 +143,7 @@ impl Board {
         }
     }
 
-    fn first_available_row_for_column(&self, col: usize) -> Option<usize> {
+    pub fn first_available_row_for_column(&self, col: usize) -> Option<usize> {
         if col >= WIDTH {
             return None
         }
@@ -148,6 +154,16 @@ impl Board {
             }
         }
         None
+    }
+
+    pub fn available_columns(&self) -> Vec<usize> {
+        let mut cols = Vec::new();
+        for col in 0..WIDTH {
+            if self.slots[col][HEIGHT - 1] == 0 {
+                cols.push(col);
+            }
+        }
+        cols
     }
 }
 

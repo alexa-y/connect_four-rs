@@ -1,9 +1,12 @@
 mod board;
+mod bot;
+mod game;
 mod server;
 mod client;
 
 use crate::board::Board;
 use crate::client::Client;
+use crate::game::Game;
 use std::env;
 use std::io::{self, BufRead};
 use std::net::TcpStream;
@@ -25,6 +28,9 @@ fn main() -> io::Result<()> {
 
         let stream = TcpStream::connect(address)?;
         Client::new(stream, 2).process()?
+    } else if args[1] == "generate" {
+        let game = Game::generate(); 
+        game.print();
     }
 
     Ok(())
@@ -34,6 +40,8 @@ fn play(reader: &mut dyn BufRead) -> io::Result<()> {
     let mut board = Board::new();
     let mut piece: u8 = 1;
     let mut buffer = String::new();
+
+    bot::bot::best_move(&board);
 
     println!("Input a column 1-7");
 
