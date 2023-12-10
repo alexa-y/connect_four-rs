@@ -60,7 +60,7 @@ impl Board {
         for row in 0..HEIGHT {
             let mut pos = 0;
             let mut piece = 0;
-            
+
             for col in 0..WIDTH {
                 if self.slots[col][row] == 0 {
                     piece = 0;
@@ -243,7 +243,7 @@ mod tests {
         }
         assert_eq!(board.winner().unwrap(), 1);
     }
-    
+
     #[test]
     fn test_returns_winner_with_simple_row() {
         let mut board = setup_board();

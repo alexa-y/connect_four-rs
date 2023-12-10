@@ -33,7 +33,7 @@ pub fn train() {
     let mut opt = nn::Adam::default().build(&vs, 1e-2).unwrap();
     println!("{:?}", model);
 
-    for epoch_idx in 0..50 {
+    for epoch_idx in 0..200 {
         let mut obs = env.reset();
         let mut steps: Vec<Step<i64>> = vec![];
         // Perform some rollouts with the current model.
@@ -57,7 +57,7 @@ pub fn train() {
             episodes,
             sum_r / episodes as f64
         );
-        
+
         // Train the model via policy gradient on the rollout data.
         let batch_size = steps.len() as i64;
         let actions: Vec<i64> = steps.iter().map(|s| s.action).collect();
@@ -74,5 +74,5 @@ pub fn train() {
         opt.backward_step(&loss)
     }
 
-    vs.save(std::path::Path::new("model.ot")).unwrap();
+    vs.save("model.ot").unwrap();
 }

@@ -8,6 +8,6 @@ pub fn listen() -> io::Result<()> {
     println!("Listening on {:?}", listener.local_addr().unwrap());
 
     let mut _stream = listener.accept()?;
-    
+
     Client::new(_stream.0, 1).process()
 }

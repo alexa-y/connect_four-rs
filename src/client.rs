@@ -24,7 +24,7 @@ impl Client {
             self.stream.take_error().expect("Error communicating with remote");
 
             let column: usize;
-            
+
             if self.piece == self.turn {
                 column = self.read_from_stdin();
             } else {
@@ -69,9 +69,9 @@ impl Client {
 
         while let Ok(_) = reader.read_line(&mut buffer) {
             let col = buffer.trim().parse::<usize>();
-    
+
             buffer.clear();
-    
+
             match col {
                 Ok(column) => return column,
                 Err(_) => Self::print_column_error()

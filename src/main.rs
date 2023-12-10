@@ -29,7 +29,7 @@ fn main() -> io::Result<()> {
         let stream = TcpStream::connect(address)?;
         Client::new(stream, 2).process()?
     } else if args[1] == "generate" {
-        let game = Game::generate(); 
+        let game = Game::generate();
         game.print();
     } else if args[1] == "train" {
         let _ = bot::bot::train();

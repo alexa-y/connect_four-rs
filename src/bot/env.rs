@@ -17,10 +17,10 @@ pub struct Step<A> {
 
 impl Env {
     pub fn new() -> Env {
-        Env { 
+        Env {
             board: Board::new(),
             thread_rng: rand::thread_rng()
-        }   
+        }
     }
 
     pub fn reset(&mut self) -> Tensor {
@@ -51,7 +51,7 @@ impl Env {
                 reward += 100.0;
             }
         }
-        
+
         Step { obs: self.to_tensor(), action, reward: reward, is_done }
     }
 

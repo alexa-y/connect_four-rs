@@ -13,6 +13,7 @@ impl Game {
             moves: Vec::new()
         }
     }
+
     pub fn generate() -> Game {
         let mut game = Self::new();
         let mut rng = rand::thread_rng();
