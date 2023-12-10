@@ -165,6 +165,16 @@ impl Board {
         }
         cols
     }
+
+    pub fn flatten(&self) -> Vec<u8> {
+        let mut flat = Vec::new();
+        for col in 0..WIDTH {
+            for row in 0..HEIGHT {
+                flat.push(self.slots[col][row]);
+            }
+        }
+        flat
+    }
 }
 
 #[cfg(test)]

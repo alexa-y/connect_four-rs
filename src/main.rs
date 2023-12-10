@@ -31,6 +31,10 @@ fn main() -> io::Result<()> {
     } else if args[1] == "generate" {
         let game = Game::generate(); 
         game.print();
+    } else if args[1] == "train" {
+        let _ = bot::bot::train();
+    } else {
+        println!("Unknown command: {}", args[1]);
     }
 
     Ok(())
@@ -40,8 +44,6 @@ fn play(reader: &mut dyn BufRead) -> io::Result<()> {
     let mut board = Board::new();
     let mut piece: u8 = 1;
     let mut buffer = String::new();
-
-    bot::bot::best_move(&board);
 
     println!("Input a column 1-7");
 
