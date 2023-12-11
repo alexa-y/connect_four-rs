@@ -33,6 +33,9 @@ fn main() -> io::Result<()> {
         game.print();
     } else if args[1] == "train" {
         let _ = bot::bot::train();
+    } else if args[1] == "bot" {
+        let mut reader = io::stdin().lock();
+        play_bot(&mut reader)?
     } else {
         println!("Unknown command: {}", args[1]);
     }
@@ -68,6 +71,65 @@ fn play(reader: &mut dyn BufRead) -> io::Result<()> {
                     println!("{}", "No more available slots remain. Result is a draw.");
                     return Ok(())
                 }
+            },
+            Err(_) => {
+                print_column_error();
+            }
+        }
+    }
+    Ok(())
+}
+
+fn play_bot(reader: &mut dyn BufRead) -> io::Result<()> {
+    let mut board = Board::new();
+    let mut bot = bot::bot::Bot::new();
+    bot.load("model.ot");
+
+    let mut buffer = String::new();
+
+    println!("Input a column 1-7");
+
+    // TODO: clean this up
+    while let Ok(_) = reader.read_line(&mut buffer) {
+        let col = buffer.trim().parse::<usize>();
+
+        buffer.clear();
+
+        if col.is_err() {
+            print_column_error();
+            continue;
+        }
+
+        match board.place(col.unwrap() - 1, 1) {
+            Ok(_) => {
+                board.print();
+                if let Some(winner) = board.winner() {
+                    println!("{} {}", Board::rune_for_piece(winner), "wins!");
+                    return Ok(())
+                } else if board.full() {
+                    println!("{}", "No more available slots remain. Result is a draw.");
+                    return Ok(())
+                }
+
+                println!("Bot is thinking...");
+
+                let bot_move = bot.predict(&board);
+                match board.place(bot_move as usize, 2) {
+                    Ok(_) => {
+                        board.print();
+                        if let Some(winner) = board.winner() {
+                            println!("{} {}", Board::rune_for_piece(winner), "wins!");
+                            return Ok(())
+                        } else if board.full() {
+                            println!("{}", "No more available slots remain. Result is a draw.");
+                            return Ok(())
+                        }
+                    },
+                    Err(_) => {
+                        print_column_error();
+                    }
+                }
+
             },
             Err(_) => {
                 print_column_error();

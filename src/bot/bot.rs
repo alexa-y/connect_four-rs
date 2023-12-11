@@ -1,7 +1,13 @@
+use crate::board::Board;
 use crate::bot::env::{Env, Step};
-use tch::{nn, nn::OptimizerConfig, Kind::Float, Tensor};
+use tch::{nn, nn::OptimizerConfig, nn::Sequential, Kind::Float, Tensor};
 
-fn model(p: &nn::Path, input_shape: &[i64], nact: i64) -> impl nn::Module {
+pub struct Bot {
+    model: Sequential,
+    vs: nn::VarStore
+}
+
+fn model(p: &nn::Path, input_shape: &[i64], nact: i64) -> Sequential {
     let nin = input_shape.len() as i64;
     nn::seq()
         .add(nn::linear(p / "lin1", nin, 32, Default::default()))
@@ -24,22 +30,21 @@ fn accumulate_rewards(steps: &[Step<i64>]) -> Vec<f64> {
 
 /// Trains an agent using the policy gradient algorithm.
 pub fn train() {
+    let bot = Bot::new();
     let mut env = Env::new();
     println!("action space: {:?}", env.action_space());
     println!("observation space: {:?}", env.observation_space());
 
-    let vs = nn::VarStore::new(tch::Device::Cpu);
-    let model = model(&vs.root(), &env.observation_space(), env.action_space());
-    let mut opt = nn::Adam::default().build(&vs, 1e-2).unwrap();
-    println!("{:?}", model);
+    let mut opt = nn::Adam::default().build(&bot.vs, 1e-3).unwrap();
+    println!("{:?}", bot.model);
 
-    for epoch_idx in 0..200 {
+    for epoch_idx in 0..1000 {
         let mut obs = env.reset();
         let mut steps: Vec<Step<i64>> = vec![];
         // Perform some rollouts with the current model.
         loop {
             let action = tch::no_grad(|| {
-                obs.unsqueeze(0).apply(&model).softmax(1, Float).multinomial(1, true)
+                obs.unsqueeze(0).apply(&bot.model).softmax(1, Float).multinomial(1, true)
             });
             let action = i64::try_from(action).unwrap();
             let step = env.step(action);
@@ -67,12 +72,36 @@ pub fn train() {
         let action_mask =
             Tensor::zeros([batch_size, env.action_space()], tch::kind::FLOAT_CPU).scatter_value(1, &actions, 1.0);
         let obs: Vec<Tensor> = steps.into_iter().map(|s| s.obs).collect();
-        let logits = Tensor::stack(&obs, 0).apply(&model);
+        let logits = Tensor::stack(&obs, 0).apply(&bot.model);
         let log_probs =
             (action_mask * logits.log_softmax(1, Float)).sum_dim_intlist(1, false, Float);
         let loss = -(rewards * log_probs).mean(Float);
         opt.backward_step(&loss)
     }
 
-    vs.save("model.ot").unwrap();
+    bot.save("model.ot");
+}
+
+impl Bot {
+    pub fn new() -> Bot {
+        let vs = nn::VarStore::new(tch::Device::Cpu);
+        let model = model(&vs.root(), &[0; 42], 7);
+        Bot { model, vs }
+    }
+
+    pub fn load(&mut self, path: &str) {
+        self.vs.load(path).unwrap();
+    }
+
+    pub fn save(&self, path: &str) {
+        self.vs.save(path).unwrap();
+    }
+
+    pub fn predict(&self, board: &Board) -> i64 {
+        let obs = Tensor::from_slice(&board.flatten()).to_kind(Float);
+        let action = obs.unsqueeze(0).apply(&self.model).softmax(1, Float).multinomial(1, true);
+        let bot_move = i64::try_from(action).unwrap();
+
+        bot_move
+    }
 }
